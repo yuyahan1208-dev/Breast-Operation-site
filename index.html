@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>乳癌病友安心衛教指南</title>
+    
+    <!-- 1. 確保先載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #FEF2F2; /* tailwind rose-50 */
+            color: #44403C; /* tailwind stone-800 */
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom scrollbar for a softer look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #fff1f2; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #fda4af; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #fb7185; 
+        }
+    </style>
+    
+    <!-- 2. 使用 type="text/tailwindcss" 來定義自訂設定，避免 JS 載入順序問題 -->
+    <style type="text/tailwindcss">
+        @theme {
+            --color-brand-light: #FFE4E6; /* rose-100 */
+            --color-brand: #F43F5E; /* rose-500 */
+            --color-brand-dark: #9F1239; /* rose-900 */
+            --color-brand-soft: #FFF1F2; /* rose-50 */
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const Icons = {
+            Heart: () => <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>,
+            Check: () => <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>,
+            XMark: () => <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>,
+            Shield: () => <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
+            Drop: () => <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>,
+            Lungs: () => <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>,
+            Scale: () => <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>,
+            Clock: () => <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+            Bed: () => <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 11h18M3 15h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>,
+            Lock: () => <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-stone-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>,
+            Unlock: () => <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>,
+            Alert: () => <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>,
+            Contact: () => <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
+            Soap: () => <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 11h18M3 15h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> // Using generic box/bed icon as placeholder for soap
+        };
+
+        const Card = ({ children, className = "" }) => (
+            <div className={`bg-white rounded-3xl shadow-sm border border-rose-50 overflow-hidden ${className}`}>
+                {children}
+            </div>
+        );
+
+        const SectionTitle = ({ title, subtitle, icon: Icon }) => (
+            <div className="flex flex-col items-center text-center mb-8">
+                {Icon && <div className="mb-3 bg-rose-100 p-4 rounded-full"><Icon /></div>}
+                <h2 className="text-2xl md:text-3xl font-bold text-stone-800">{title}</h2>
+                {subtitle && <p className="text-stone-500 mt-2">{subtitle}</p>}
+                <div className="w-16 h-1 bg-rose-300 rounded-full mt-4"></div>
+            </div>
+        );
+
+        const PreSurgeryView = ({ onNavigate }) => {
+            return (
+                <div className="animate-fade-in max-w-4xl mx-auto pb-20">
+                    <button onClick={() => onNavigate('home')} className="fixed top-4 left-4 z-50 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow hover:bg-rose-50 transition-colors flex items-center text-stone-600 font-medium">
+                        ← 回首頁
+                    </button>
+
+                    {/* Banner */}
+                    <div className="text-center py-16 px-4 relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-rose-100 to-orange-50 -z-10 rounded-b-[3rem]"></div>
+                        <Icons.Heart />
+                        <h1 className="text-4xl font-bold text-stone-800 mt-6 mb-4">我們陪妳一起準備</h1>
+                        <p className="text-xl text-stone-600">乳癌術前安心指南 — 給妳的專屬準備手帳</p>
+                    </div>
+
+                    <div className="px-4 space-y-12 mt-12">
+                        {/* Section 1: Routine Checks */}
+                        <Card className="p-8 relative">
+                            <SectionTitle title="常規檢查與同意書" subtitle="手術前的安全確認" icon={Icons.Drop} />
+                            
+                            <div className="grid md:grid-cols-2 gap-8 items-center">
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-4 bg-rose-50 p-4 rounded-2xl">
+                                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+                                            <Icons.Drop />
+                                        </div>
+                                        <div className="text-lg font-medium text-stone-700">抽血檢查</div>
+                                    </div>
+                                    <div className="flex items-center gap-4 bg-rose-50 p-4 rounded-2xl">
+                                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+                                            <Icons.Lungs />
+                                        </div>
+                                        <div className="text-lg font-medium text-stone-700">胸部 X 光</div>
+                                    </div>
+                                    <p className="text-stone-500 text-sm italic">「手術同意書是我們對您安全承諾的契約，請務必於術前填妥並確認，當天記得攜帶喔！」</p>
+                                </div>
+                                <div className="text-center bg-rose-50/50 p-8 rounded-2xl border border-rose-100 h-full flex flex-col justify-center">
+                                    <p className="text-lg font-bold text-stone-700 mb-6">請點擊下方按鈕簽署同意書</p>
+                                    <a 
+                                        href="https://e-consent.selfiesign.co/manage/userLogin.html" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center justify-center gap-2 bg-rose-500 text-white font-bold py-4 px-8 rounded-full shadow-md hover:bg-rose-600 hover:shadow-lg transition-all transform hover:-translate-y-1 w-full max-w-[280px] mx-auto text-lg"
+                                    >
+                                        前往電子同意書系統 
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                                            <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* Section 2: Nutrition */}
+                        <Card className="p-8 bg-gradient-to-br from-white to-orange-50/50">
+                            <SectionTitle title="術前營養天平" icon={Icons.Scale} />
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 flex flex-col items-center text-center">
+                                    <h3 className="font-bold text-lg text-emerald-700 mb-4 bg-emerald-50 px-4 py-1 rounded-full">一般狀態</h3>
+                                    <div className="w-32 h-32 rounded-full border-4 border-emerald-200 flex items-center justify-center mb-4 bg-emerald-50 text-emerald-600 font-bold">
+                                        六大類飲食
+                                    </div>
+                                    <p className="text-stone-600">維持均衡飲食，<br/>為身體儲備完整營養。</p>
+                                </div>
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 flex flex-col items-center text-center">
+                                    <h3 className="font-bold text-lg text-amber-700 mb-4 bg-amber-50 px-4 py-1 rounded-full">若體重流失 / 營養不良</h3>
+                                    <div className="flex gap-4 mb-4">
+                                        <div className="w-20 h-24 bg-amber-100 rounded-lg flex items-center justify-center font-bold text-amber-800 shadow-inner">熱量</div>
+                                        <div className="w-20 h-24 bg-amber-100 rounded-lg flex items-center justify-center font-bold text-amber-800 shadow-inner">蛋白質</div>
+                                    </div>
+                                    <p className="text-stone-600">請特別增加攝取，<br/>避免組織耗損，為修復建立好基礎。</p>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* Section 3: Meds Pause */}
+                        <Card className="p-8">
+                            <SectionTitle title="術前 1-2 週 請按下暫停鍵" subtitle="主動告知：請務必向醫師報備目前服用的所有藥物與保健食品" icon={Icons.Clock} />
+                            <div className="grid md:grid-cols-3 gap-4">
+                                <div className="bg-rose-50 p-5 rounded-2xl border-t-4 border-rose-400">
+                                    <h4 className="font-bold text-rose-800 flex items-center gap-2 mb-2"><Icons.Alert /> 增加出血風險</h4>
+                                    <p className="text-xs text-rose-600 mb-4">抑制血小板凝集，干擾凝血機轉</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {['抗凝血劑', '人參', '銀杏', '亞麻籽油', '綠茶粉', '薑黃', '葫蘆巴', '生薑', '山楂草', '鋸棕櫚', '大蒜'].map(item => (
+                                            <span key={item} className="bg-white px-2 py-1 rounded text-sm text-stone-600 shadow-sm">{item}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="bg-orange-50 p-5 rounded-2xl border-t-4 border-orange-400">
+                                    <h4 className="font-bold text-orange-800 flex items-center gap-2 mb-2"><Icons.Alert /> 引起肌肉發炎</h4>
+                                    <p className="text-xs text-orange-600 mb-4">增加橫紋肌溶解症風險</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {['紅麴', '艾草油', '甘草', '水溶性肌酸', '塑身燃脂膠囊'].map(item => (
+                                            <span key={item} className="bg-white px-2 py-1 rounded text-sm text-stone-600 shadow-sm">{item}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="bg-teal-50 p-5 rounded-2xl border-t-4 border-teal-400">
+                                    <h4 className="font-bold text-teal-800 flex items-center gap-2 mb-2"><Icons.Alert /> 影響麻醉品質</h4>
+                                    <p className="text-xs text-teal-600 mb-4">具鎮定安眠效果，干擾麻醉深度控制</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {['印度人參', '纈草根', '聖羅勒', '卡瓦胡椒'].map(item => (
+                                            <span key={item} className="bg-white px-2 py-1 rounded text-sm text-stone-600 shadow-sm">{item}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* Section 4 & 5: Night Before & Day Of */}
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <Card className="p-8">
+                                <SectionTitle title="術前一晚的沐浴儀式" />
+                                <div className="bg-blue-50 p-4 rounded-xl text-blue-800 font-medium text-center mb-6">
+                                    住院前一日洗澡時，請用肥皂充分清潔患側乳房，去除皮脂與皮屑。
+                                </div>
+                                <div className="flex justify-between items-center bg-rose-50 p-4 rounded-2xl">
+                                    <div className="text-center w-1/2 border-r border-rose-200 pr-2">
+                                        <div className="flex justify-center mb-2"><Icons.Check /></div>
+                                        <h4 className="font-bold text-emerald-600">乾淨的皮膚</h4>
+                                        <p className="text-xs text-stone-500 mt-1">記號附著清晰，降低感染風險</p>
+                                    </div>
+                                    <div className="text-center w-1/2 pl-2">
+                                        <div className="flex justify-center mb-2"><Icons.XMark /></div>
+                                        <h4 className="font-bold text-rose-600">塗乳液的皮膚</h4>
+                                        <p className="text-xs text-stone-500 mt-1">患部絕對不可擦乳液，油脂會導致記號模糊，影響定位</p>
+                                    </div>
+                                </div>
+                            </Card>
+
+                            <Card className="p-8">
+                                <SectionTitle title="梳妝台前的減法" subtitle="手術當日禁忌" />
+                                <div className="flex flex-col gap-3">
+                                    {['隱形眼鏡 / 假睫毛', '所有彩妝', '活動假牙', '任何金屬飾品', '指甲油 (含水晶、凝膠指甲)'].map(item => (
+                                        <div key={item} className="flex items-center gap-3 bg-stone-50 p-3 rounded-lg border border-stone-100">
+                                            <Icons.XMark />
+                                            <span className="font-medium text-stone-700">{item}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-4 text-sm text-stone-500 bg-rose-50 p-3 rounded-lg">
+                                    別擔心後續，護理人員會協助剃除患側腋下及胸部毛髮。
+                                </div>
+                            </Card>
+                        </div>
+
+                        {/* Section 6: Packing */}
+                        <Card className="p-8">
+                            <SectionTitle title="住院物品清單" subtitle="像準備小旅行一樣" />
+                            <div className="grid md:grid-cols-3 gap-6">
+                                <div className="bg-orange-50 p-6 rounded-2xl">
+                                    <h4 className="font-bold text-orange-800 border-b border-orange-200 pb-2 mb-3">衣物區</h4>
+                                    <p className="font-medium text-stone-700">前開式上衣、前開式睡衣</p>
+                                    <p className="text-sm text-stone-500 mt-2">原因：術後手臂活動受限且有引流管，前開設計讓穿脫與檢查最無痛。</p>
+                                </div>
+                                <div className="bg-rose-50 p-6 rounded-2xl">
+                                    <h4 className="font-bold text-rose-800 border-b border-rose-200 pb-2 mb-3">實用小物區</h4>
+                                    <ul className="text-stone-700 font-medium space-y-2">
+                                        <li>• 吸管型瓶蓋 <span className="text-sm font-normal text-stone-500">(躺臥時也能輕鬆喝水)</span></li>
+                                        <li>• 盥洗包 <span className="text-sm font-normal text-stone-500">(牙膏刷、杯子、臉盆、香皂、衛生紙、拖鞋)</span></li>
+                                    </ul>
+                                </div>
+                                <div className="bg-teal-50 p-6 rounded-2xl">
+                                    <h4 className="font-bold text-teal-800 border-b border-teal-200 pb-2 mb-3">安撫與支撐區</h4>
+                                    <ul className="text-stone-700 font-medium space-y-2">
+                                        <li>• 喜歡的毛巾 <span className="text-sm font-normal text-stone-500">(營造熟悉感)</span></li>
+                                        <li>• 抱枕或靠墊 <span className="text-sm font-normal text-stone-500">(術後為手臂或側躺提供支撐)</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* Section 7: Mental & Contact */}
+                        <Card className="p-8 bg-gradient-to-br from-rose-400 to-orange-400 text-white border-none">
+                            <div className="text-center max-w-2xl mx-auto">
+                                <h2 className="text-3xl font-bold mb-6">身心安頓：我們隨時都在這裡</h2>
+                                <p className="text-lg mb-8 bg-white/20 p-4 rounded-xl backdrop-blur-sm">
+                                    實務準備已全數到位，我們為身體築起了最安全的防護網。身體準備好了，心也可以跟著放鬆。透過深呼吸，能讓身體以最省力的方式，從容迎戰手術。
+                                </p>
+                                <div className="bg-white text-stone-800 p-6 rounded-2xl shadow-lg inline-block text-left w-full md:w-auto">
+                                    <h4 className="font-bold text-rose-600 mb-2 border-b border-rose-100 pb-2">聯新國際醫院 - 乳房外科 / 個案管理師處</h4>
+                                    <p className="font-medium">電話：(03) 4941234</p>
+                                    <p className="font-medium">轉分機：4166 或 4168</p>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* 底部導覽列 */}
+                        <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4 border-t border-rose-100 pt-12">
+                            <button onClick={() => onNavigate('home')} className="bg-white border-2 border-rose-200 text-rose-600 px-8 py-4 rounded-full font-bold shadow-sm hover:bg-rose-50 transition-colors w-full sm:w-auto flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                                返回首頁
+                            </button>
+                            <button onClick={() => onNavigate('post')} className="bg-rose-500 text-white px-8 py-4 rounded-full font-bold shadow-md hover:bg-rose-600 transition-colors w-full sm:w-auto flex items-center justify-center gap-2">
+                                了解「手術後」指南
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const PostSurgeryView = ({ onNavigate }) => {
+            return (
+                <div className="animate-fade-in max-w-4xl mx-auto pb-20">
+                    <button onClick={() => onNavigate('home')} className="fixed top-4 left-4 z-50 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow hover:bg-rose-50 transition-colors flex items-center text-stone-600 font-medium">
+                        ← 回首頁
+                    </button>
+
+                    {/* Banner */}
+                    <div className="text-center py-16 px-4 relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-rose-50 to-teal-50 -z-10 rounded-b-[3rem]"></div>
+                        <Icons.Heart />
+                        <h1 className="text-4xl font-bold text-stone-800 mt-6 mb-4">您的專屬康復指南</h1>
+                        <p className="text-xl text-stone-600">乳癌術後照護與溫暖提醒 — 一步一步，我們陪您安心復原</p>
+                    </div>
+
+                    <div className="px-4 space-y-12 mt-12">
+                        {/* Section 1: Diet & Breathe */}
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <Card className="p-8">
+                                <SectionTitle title="漸進式飲食" subtitle="一般無特殊禁忌" />
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-4 bg-orange-50 p-4 rounded-xl">
+                                        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center font-bold text-orange-400">1</div>
+                                        <div>
+                                            <h4 className="font-bold text-stone-700">少量開水</h4>
+                                            <p className="text-sm text-stone-500">若無噁心嘔吐即可開始</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4 bg-orange-100 p-4 rounded-xl">
+                                        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center font-bold text-orange-500">2</div>
+                                        <div>
+                                            <h4 className="font-bold text-stone-700">清流質至軟質飲食</h4>
+                                            <p className="text-sm text-stone-500">如米湯、無渣果汁</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4 bg-orange-200 p-4 rounded-xl">
+                                        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center font-bold text-orange-600">3</div>
+                                        <div>
+                                            <h4 className="font-bold text-stone-700">恢復一般飲食</h4>
+                                            <p className="text-sm text-stone-500">約 1-2 週後</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
+
+                            <Card className="p-8 bg-teal-50/50">
+                                <SectionTitle title="盡早下床與呼吸" icon={Icons.Lungs} />
+                                <div className="bg-white p-6 rounded-2xl shadow-sm space-y-4 border border-teal-100 mt-4">
+                                    <p className="flex items-start gap-3">
+                                        <span className="text-teal-500 font-bold text-xl mt-1">✓</span>
+                                        <span className="text-stone-700 font-medium">術後無頭暈應盡早下床。</span>
+                                    </p>
+                                    <div className="h-px w-full bg-teal-50"></div>
+                                    <p className="flex items-start gap-3">
+                                        <span className="text-teal-500 font-bold text-xl mt-1">✓</span>
+                                        <span className="text-stone-700 font-medium">多做深呼吸與咳嗽，促進肺部擴張，避免呼吸道合併症。</span>
+                                    </p>
+                                </div>
+                            </Card>
+                        </div>
+
+                        {/* Section 2: Protect Arm */}
+                        <Card className="p-0 overflow-hidden">
+                            <div className="p-8 text-center pb-4">
+                                <h2 className="text-2xl font-bold text-stone-800">守護患側手臂：絕對保護原則</h2>
+                            </div>
+                            <div className="flex flex-col md:flex-row">
+                                <div className="w-full md:w-1/2 bg-rose-400 p-8 text-white flex flex-col items-center">
+                                    <div className="bg-white/20 px-6 py-2 rounded-full font-bold text-xl mb-8">絕對避免</div>
+                                    <div className="grid grid-cols-2 gap-6 w-full max-w-xs text-center">
+                                        <div>
+                                            <div className="w-20 h-20 bg-white rounded-full mx-auto flex items-center justify-center mb-2 relative text-rose-500 font-bold text-xl">
+                                                <Icons.XMark />
+                                            </div>
+                                            <span className="text-sm font-medium">禁抽血、打針<br/>靜脈滴注</span>
+                                        </div>
+                                        <div>
+                                            <div className="w-20 h-20 bg-white rounded-full mx-auto flex items-center justify-center mb-2 relative text-rose-500 font-bold text-xl">
+                                                <Icons.XMark />
+                                            </div>
+                                            <span className="text-sm font-medium">禁量血壓</span>
+                                        </div>
+                                        <div>
+                                            <div className="w-20 h-20 bg-white rounded-full mx-auto flex items-center justify-center mb-2 relative text-rose-500 font-bold text-xl">
+                                                <Icons.XMark />
+                                            </div>
+                                            <span className="text-sm font-medium">禁提重物</span>
+                                        </div>
+                                        <div>
+                                            <div className="w-20 h-20 bg-white rounded-full mx-auto flex items-center justify-center mb-2 relative text-rose-500 font-bold text-xl">
+                                                <Icons.XMark />
+                                            </div>
+                                            <span className="text-sm font-medium">避免穿著過緊</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="w-full md:w-1/2 bg-emerald-100 p-8 flex flex-col items-center justify-center border-l-4 border-white">
+                                    <div className="bg-emerald-600/10 text-emerald-800 px-6 py-2 rounded-full font-bold text-xl mb-8">可以做</div>
+                                    <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center mb-6 shadow-md border-4 border-emerald-200 text-emerald-500">
+                                        <Icons.Check />
+                                    </div>
+                                    <p className="text-center text-emerald-900 font-bold text-lg">
+                                        多做手腕 (握拳再放鬆)<br/>及手肘的伸展運動
+                                    </p>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* Section 3: Sleep */}
+                        <Card className="p-8">
+                            <SectionTitle title="休息與睡眠的正確姿勢" icon={Icons.Bed} />
+                            <div className="flex flex-col md:flex-row gap-6 items-center bg-stone-50 p-6 rounded-2xl">
+                                <div className="flex-1 bg-white p-6 rounded-xl shadow-sm border border-stone-100">
+                                    <h4 className="font-bold text-teal-700 flex items-center gap-2 mb-2"><Icons.Check /> 枕頭墊高</h4>
+                                    <p className="text-stone-600">保持與胸壁垂直，促進淋巴回流，減輕水腫。</p>
+                                </div>
+                                <div className="flex-1 space-y-4">
+                                    <div className="bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex items-center gap-4">
+                                        <div className="bg-rose-100 p-2 rounded-full"><Icons.XMark /></div>
+                                        <p className="font-medium text-stone-700">不可將頭靠在患側手臂上</p>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-xl shadow-sm border border-rose-100 flex items-center gap-4">
+                                        <div className="bg-rose-100 p-2 rounded-full"><Icons.XMark /></div>
+                                        <p className="font-medium text-stone-700">避免壓迫患側 (勿側睡於患側)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* Section 4: Drainage */}
+                        <Card className="p-8 bg-rose-50/30">
+                            <SectionTitle title="引流管照護 5 步驟" />
+                            <div className="flex flex-wrap justify-center gap-4 md:gap-8 mb-10">
+                                {[
+                                    { icon: Icons.Lock, text: "1. 關上管夾" },
+                                    { icon: Icons.Unlock, text: "2. 開啟下管夾" },
+                                    { icon: Icons.Drop, text: "3. 收集引流液", sub: "(需記錄引流液量)" },
+                                    { icon: Icons.Lock, text: "4. 關下管夾" },
+                                    { icon: Icons.Unlock, text: "5. 開啟上管夾" },
+                                ].map((step, idx) => (
+                                    <div key={idx} className="flex flex-col items-center">
+                                        <div className="w-20 h-20 bg-white rounded-full shadow border-2 border-rose-100 flex items-center justify-center mb-3">
+                                            <step.icon />
+                                        </div>
+                                        <p className="font-bold text-stone-700">{step.text}</p>
+                                        {step.sub && <p className="text-xs text-stone-500 mt-1">{step.sub}</p>}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="bg-white border-2 border-rose-200 p-6 rounded-2xl relative">
+                                <div className="absolute -top-3 left-6 bg-rose-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow-sm">Alert Dashboard</div>
+                                <p className="font-medium text-stone-600 mb-4 mt-2">遇到以下情況，請隨時通知醫護人員：</p>
+                                <div className="flex flex-col md:flex-row justify-around gap-4">
+                                    <div className="flex items-center gap-3 bg-rose-50 px-4 py-3 rounded-lg"><Icons.Alert /> 引流球已半滿</div>
+                                    <div className="flex items-center gap-3 bg-rose-50 px-4 py-3 rounded-lg"><Icons.Alert /> 管子脫垂</div>
+                                    <div className="flex items-center gap-3 bg-rose-50 px-4 py-3 rounded-lg"><Icons.Alert /> 傷口有滲液</div>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* Section 5: Activities */}
+                        <Card className="p-8">
+                            <div className="bg-amber-50 p-6 rounded-2xl border-l-4 border-amber-400 mb-8 flex items-start gap-4">
+                                <Icons.Clock />
+                                <div>
+                                    <h3 className="text-xl font-bold text-amber-900 mb-2">術後 1-2 週日常活動：復健時機請「絕對遵從醫囑」！</h3>
+                                    <p className="text-amber-800">部分建議術後24小時輕柔開始；但部分建議「引流管拔除前」不宜運動，以免增加出血、延後拔管。</p>
+                                </div>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <div className="bg-teal-100 text-teal-800 font-bold text-center py-2 rounded-t-xl">可以自己做</div>
+                                    <div className="border border-t-0 border-teal-100 rounded-b-xl p-4 space-y-4">
+                                        <div className="flex items-center gap-3"><Icons.Check /> 刷牙洗臉</div>
+                                        <div className="flex items-center gap-3"><Icons.Check /> 用患側手吃飯</div>
+                                        <div className="flex items-center gap-3"><Icons.Check /> 梳頭 (注意保持頭頸部挺直！)</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="bg-rose-100 text-rose-800 font-bold text-center py-2 rounded-t-xl">暫時先不要</div>
+                                    <div className="border border-t-0 border-rose-100 rounded-b-xl p-4 flex items-center justify-center h-full">
+                                        <div className="flex items-center gap-3 text-xl font-medium text-stone-600"><Icons.XMark /> 做家事</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+
+                        {/* Section 6 & 7: Numbness & Home Care */}
+                        <div className="grid md:grid-cols-2 gap-8">
+                            <Card className="p-8 bg-[#FDFBF7]">
+                                <h3 className="text-2xl font-bold text-stone-800 mb-4 text-center">麻痛或刺痛感是<br/><span className="text-rose-600">「正常的」！</span></h3>
+                                <p className="text-center text-stone-600 mb-8">全乳切除後，胸壁皮膚會暫時失去知覺，不必過度擔憂。</p>
+                                <div className="relative w-48 h-48 mx-auto mb-6">
+                                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                        <path className="text-stone-200" strokeWidth="4" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        <path className="text-teal-400" strokeWidth="4" strokeDasharray="75, 100" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    </svg>
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                        <span className="text-3xl font-bold text-stone-800">9個月</span>
+                                        <span className="text-sm text-stone-500">趨於穩定</span>
+                                    </div>
+                                </div>
+                                <p className="text-center text-stone-700 font-medium">神經感覺會隨時間改善。<br/>大約在術後 9 個月後趨於穩定，最終約可恢復七至八成。</p>
+                            </Card>
+
+                            <Card className="p-8">
+                                <h3 className="text-2xl font-bold text-stone-800 mb-6 text-center">返家後的注意事項</h3>
+                                <div className="space-y-4">
+                                    <div className="bg-stone-50 p-4 rounded-xl">
+                                        <h4 className="font-bold text-stone-800 mb-2 border-b pb-1 border-stone-200">清潔保養</h4>
+                                        <p className="text-stone-600 text-sm">使用柔軟毛巾「輕輕」擦洗。擦乾後可塗抹冷霜或乳液止癢。</p>
+                                    </div>
+                                    <div className="bg-stone-50 p-4 rounded-xl">
+                                        <h4 className="font-bold text-stone-800 mb-2 border-b pb-1 border-stone-200">權益與生活</h4>
+                                        <p className="text-stone-600 text-sm mb-1">• 保險：全乳切除具勞/公/農保身分者，可申請失能給付。</p>
+                                        <p className="text-stone-600 text-sm">• 生活：性生活視體力進行。義乳裝置、懷孕或避孕藥需求請先諮詢醫師。</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        </div>
+                        
+                        {/* Section 8: Warning Signs */}
+                        <Card className="p-8 bg-rose-50/50 border-2 border-rose-100">
+                            <h3 className="text-xl font-bold text-rose-800 mb-4 flex items-center gap-2"><Icons.Alert /> 立即回診警訊</h3>
+                            <p className="text-stone-700 font-medium mb-4">如有以下症狀請立刻回診：</p>
+                            <div className="flex flex-wrap gap-3">
+                                {['患側水腫', '傷口發炎', '新腫塊', '淋巴腫大', '持續咳嗽或血痰', '腰酸背痛'].map(symptom => (
+                                    <span key={symptom} className="bg-white text-rose-600 px-4 py-2 rounded-full font-bold shadow-sm border border-rose-100">{symptom}</span>
+                                ))}
+                            </div>
+                        </Card>
+
+                        {/* 底部導覽列 */}
+                        <div className="mt-12 flex flex-col sm:flex-row justify-center gap-4 border-t border-teal-100 pt-12">
+                            <button onClick={() => onNavigate('home')} className="bg-white border-2 border-teal-200 text-teal-600 px-8 py-4 rounded-full font-bold shadow-sm hover:bg-teal-50 transition-colors w-full sm:w-auto flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                                返回首頁
+                            </button>
+                            <button onClick={() => onNavigate('pre')} className="bg-teal-500 text-white px-8 py-4 rounded-full font-bold shadow-md hover:bg-teal-600 transition-colors w-full sm:w-auto flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                                複習「手術前」指南
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            // State: 'home', 'pre', 'post'
+            const [view, setView] = React.useState('home');
+
+            const handleNavigate = (targetView) => {
+                setView(targetView);
+                window.scrollTo(0, 0);
+            };
+
+            return (
+                <div className="min-h-screen">
+                    {view === 'home' && (
+                        <div className="animate-fade-in min-h-screen flex flex-col items-center justify-center p-4">
+                            <div className="text-center mb-12">
+                                <div className="inline-block bg-white p-4 rounded-full shadow-md mb-6 text-rose-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                                </div>
+                                <h1 className="text-3xl md:text-5xl font-bold text-stone-800 mb-4 tracking-wide">乳癌病友安心衛教指南</h1>
+                                <p className="text-lg text-stone-500">請選擇您目前所處的階段，我們陪妳一起準備</p>
+                            </div>
+
+                            <div className="grid md:grid-cols-2 gap-6 w-full max-w-4xl">
+                                {}
+                                <button 
+                                    onClick={() => handleNavigate('pre')}
+                                    className="group relative bg-white p-10 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 border border-transparent hover:border-rose-200 transform hover:-translate-y-2 text-left overflow-hidden"
+                                >
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-bl-full -z-10 transition-transform group-hover:scale-110"></div>
+                                    <h2 className="text-3xl font-bold text-rose-600 mb-3">手術前</h2>
+                                    <p className="text-stone-500 font-medium">術前安心指南、住院準備與常規檢查</p>
+                                    <div className="mt-8 flex justify-end">
+                                        <div className="bg-rose-100 p-3 rounded-full text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                                            →
+                                        </div>
+                                    </div>
+                                </button>
+
+                                {}
+                                <button 
+                                    onClick={() => handleNavigate('post')}
+                                    className="group relative bg-white p-10 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 border border-transparent hover:border-teal-200 transform hover:-translate-y-2 text-left overflow-hidden"
+                                >
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-bl-full -z-10 transition-transform group-hover:scale-110"></div>
+                                    <h2 className="text-3xl font-bold text-teal-600 mb-3">手術後</h2>
+                                    <p className="text-stone-500 font-medium">專屬康復指南、引流管照護與復健須知</p>
+                                    <div className="mt-8 flex justify-end">
+                                        <div className="bg-teal-100 p-3 rounded-full text-teal-600 group-hover:bg-teal-500 group-hover:text-white transition-colors">
+                                            →
+                                        </div>
+                                    </div>
+                                </button>
+                            </div>
+                            
+                            <p className="mt-16 text-sm text-stone-400">本資訊為實證醫學衛教內容，僅供參考，實際處置請依主治醫師醫囑為主。</p>
+                        </div>
+                    )}
+
+                    {}
+                    {view === 'pre' && <PreSurgeryView onNavigate={handleNavigate} />}
+                    {view === 'post' && <PostSurgeryView onNavigate={handleNavigate} />}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
